@@ -9,8 +9,10 @@ import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.MimeTypeMap;
@@ -37,7 +39,7 @@ import okhttp3.Response;
 
 public class Recording extends AppCompatActivity {
 
-    private Button play, stop, record, hold, send;
+    private Button play, hold, send;
     private MediaRecorder myAudioRecorder;
     private String outputFile;
 
@@ -46,50 +48,14 @@ public class Recording extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.recording);
         play = (Button) findViewById(R.id.play);
-        stop = (Button) findViewById(R.id.stop);
-        record = (Button) findViewById(R.id.record);
         hold = (Button) findViewById(R.id.hold);
         send = (Button) findViewById(R.id.send);
-        record.setEnabled(false);
-        stop.setEnabled(false);
         play.setEnabled(false);
 
         outputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + "/recording.3gp";
 
         resetRecording();
 
-        record.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                resetRecording();
-                try {
-                    myAudioRecorder.prepare();
-                    myAudioRecorder.start();
-                } catch (IllegalStateException ise) {
-                    // make something ...
-                } catch (IOException ioe) {
-                    // make something
-                }
-
-                record.setEnabled(false);
-                //stop.setEnabled(true);
-
-                Toast.makeText(getApplicationContext(), "Recording started", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        stop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                myAudioRecorder.stop();
-                myAudioRecorder.release();
-                myAudioRecorder = null;
-                record.setEnabled(true);
-                stop.setEnabled(false);
-                //play.setEnabled(true);
-                Toast.makeText(getApplicationContext(), "Audio Recorder successfully", Toast.LENGTH_SHORT).show();
-            }
-        });
 
         play.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -101,7 +67,7 @@ public class Recording extends AppCompatActivity {
                     mediaPlayer.prepare();
                     mediaPlayer.start();
 
-                    Toast.makeText(getApplicationContext(), "Playing Audio", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Reproduciendo Audio", Toast.LENGTH_SHORT).show();
 
                 } catch (Exception e) {
                     // make something
@@ -113,7 +79,7 @@ public class Recording extends AppCompatActivity {
         hold.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                switch(event.getAction()) {
+                switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         resetRecording();
                         try {
@@ -125,9 +91,6 @@ public class Recording extends AppCompatActivity {
                             // make something
                         }
 
-                        //record.setEnabled(false);
-                        //stop.setEnabled(true);
-
                         Toast.makeText(getApplicationContext(), "Grabación iniciada", Toast.LENGTH_SHORT).show();
                         return true; // if you want to handle the touch event
 
@@ -135,8 +98,6 @@ public class Recording extends AppCompatActivity {
                         myAudioRecorder.stop();
                         myAudioRecorder.release();
                         myAudioRecorder = null;
-                        record.setEnabled(true);
-                        //stop.setEnabled(false);
                         play.setEnabled(true);
                         Toast.makeText(getApplicationContext(), "Audio guardado satisfactoriamente", Toast.LENGTH_SHORT).show();
                         return true; // if you want to handle the touch event
@@ -149,32 +110,91 @@ public class Recording extends AppCompatActivity {
 
     }
 
-    private void activarBotonEnvio(){
+    private void activarBotonEnvio() {
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new MaterialFilePicker()
-                        .withActivity(Recording.this)
-                        .withRequestCode(10)
-                        .start();
+                enviarArchivo();
             }
         });
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == 100 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)){
+        if (requestCode == 100 && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
             activarBotonEnvio();
-        }else {
+        } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},100);
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 100);
             }
         }
     }
 
     ProgressDialog progress;
+    Response response;
 
-    void resetRecording(){
+
+    private void enviarArchivo() {
+        progress = new ProgressDialog(Recording.this);
+        progress.setTitle("Enviando");
+        progress.setMessage("Por favor espera...");
+        progress.show();
+
+        Thread hiloEnvioArvhivo = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                File f = new File(outputFile);
+                //Se obtiene la extension del archivo
+                String content_type = getMimeType(f.getPath());
+
+                String file_path = f.getAbsolutePath();
+                OkHttpClient client = new OkHttpClient();
+                RequestBody file_body = RequestBody.create(MediaType.parse(content_type), f);
+
+                RequestBody request_body = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("type", content_type)
+                        .addFormDataPart("data", "{\"id\": null,\"painLevel\": 2,\"sleepPattern\": \"poquito\",\"urlAudioFile\": null,\"foods\": [{\"id\": null,\"name\": \"carne5\"},{\"id\": null,\"name\": \"carne6\"}]}")
+                        .addFormDataPart("audioFile", file_path.substring(file_path.lastIndexOf("/") + 1), file_body)
+                        .build();
+
+                Request request = new Request.Builder()
+                        .url("http://192.168.1.9:8080/episode/register/")
+                        .post(request_body)
+                        .build();
+
+                try {
+                    response = client.newCall(request).execute();
+
+                    if (response.isSuccessful()) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getApplicationContext(), "Reporte enviado satisfactoriamente", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } else {
+                        throw new IOException("Error : " + response);
+                    }
+                    progress.dismiss();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        hiloEnvioArvhivo.start();
+    }
+
+    //Metodo que obtiene la extension del archivo en que se guarda el audio
+    private String getMimeType(String path) {
+        String extension = MimeTypeMap.getFileExtensionFromUrl(path);
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+    }
+
+    void resetRecording() {
         myAudioRecorder = new MediaRecorder();
         myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
@@ -182,61 +202,5 @@ public class Recording extends AppCompatActivity {
         myAudioRecorder.setOutputFile(outputFile);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
-        if(requestCode == 10 && resultCode == RESULT_OK){
-
-            progress = new ProgressDialog(Recording.this);
-            progress.setTitle("Uploading");
-            progress.setMessage("Please wait...");
-            progress.show();
-
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-
-                    File f  = new File(data.getStringExtra(FilePickerActivity.RESULT_FILE_PATH));
-                    String content_type  = getMimeType(f.getPath());
-
-                    String file_path = f.getAbsolutePath();
-                    OkHttpClient client = new OkHttpClient();
-                    RequestBody file_body = RequestBody.create(MediaType.parse(content_type),f);
-
-                    RequestBody request_body = new MultipartBody.Builder()
-                            .setType(MultipartBody.FORM)
-                            .addFormDataPart("type",content_type)
-                            .addFormDataPart("data","{\"id\": null,\"painLevel\": 2,\"sleepPattern\": \"poquito\",\"urlAudioFile\": null,\"foods\": [{\"id\": null,\"name\": \"carne5\"},{\"id\": null,\"name\": \"carne6\"}]}")
-                            .addFormDataPart("audioFile",file_path.substring(file_path.lastIndexOf("/")+1), file_body)
-                            .build();
-
-                    Request request = new Request.Builder()
-                            .url("http://192.168.1.9:8080/episode/register/")
-                            .post(request_body)
-                            .build();
-
-                    try {
-                        Response response = client.newCall(request).execute();
-
-                        if(!response.isSuccessful()){
-                            throw new IOException("Error : "+response);
-                        }
-
-                        progress.dismiss();
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            t.start();
-        }
-    }
-
-    private String getMimeType(String path) {
-
-        String extension = MimeTypeMap.getFileExtensionFromUrl(path);
-
-        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-    }
 
 }
