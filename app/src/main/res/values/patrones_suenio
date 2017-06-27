@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="lista_patrones">
+        <item>menos de 3 horas</item>
+        <item>entre 3 y 6 horas</item>
+        <item>entre 6 y 8 horas</item>
+        <item>mas de 8 horas</item>
+        <item>No he dormido en las ultimas 24 horas</item>
+    </string-array>
+</resources>

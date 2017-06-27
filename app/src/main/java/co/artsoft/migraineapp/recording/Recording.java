@@ -2,25 +2,25 @@ package co.artsoft.migraineapp.recording;
 
 import android.Manifest;
 import android.app.ProgressDialog;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.MimeTypeMap;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.SeekBar;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
-
-import com.nbsp.materialfilepicker.MaterialFilePicker;
-import com.nbsp.materialfilepicker.ui.FilePickerActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +42,11 @@ public class Recording extends AppCompatActivity {
     private Button play, hold, send;
     private MediaRecorder myAudioRecorder;
     private String outputFile;
+    private ProgressDialog progress;
+    private Response response;
+    Spinner spinner;
+    private SeekBar seekBar;
+    private TextView nivel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,29 +54,57 @@ public class Recording extends AppCompatActivity {
         setContentView(R.layout.recording);
         play = (Button) findViewById(R.id.play);
         hold = (Button) findViewById(R.id.hold);
+        hold.setBackgroundColor(0xFFD9D9D9);
         send = (Button) findViewById(R.id.send);
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
+        nivel = (TextView) findViewById(R.id.nivel);
+
+        Spinner spinner = (Spinner) findViewById(R.id.spinner);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.lista_patrones, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        spinner.setAdapter(adapter);
+
+
+        nivel.setText(seekBar.getProgress() + "/" + seekBar.getMax());
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progress = 0;
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
+                progress = progresValue;
+                //Toast.makeText(getApplicationContext(), "Changing seekbar's progress", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                //Toast.makeText(getApplicationContext(), "Started tracking seekbar", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                nivel.setText(progress + "/" + seekBar.getMax());
+                //Toast.makeText(getApplicationContext(), "Stopped tracking seekbar", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
         play.setEnabled(false);
 
         outputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + "/recording.3gp";
 
         resetRecording();
 
-
-        play.setOnClickListener(new View.OnClickListener() {
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
-            public void onClick(View v) {
-                MediaPlayer mediaPlayer = new MediaPlayer();
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
 
-                try {
-                    mediaPlayer.setDataSource(outputFile);
-                    mediaPlayer.prepare();
-                    mediaPlayer.start();
+            }
 
-                    Toast.makeText(getApplicationContext(), "Reproduciendo Audio", Toast.LENGTH_SHORT).show();
-
-                } catch (Exception e) {
-                    // make something
-                }
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
 
             }
         });
@@ -82,32 +115,54 @@ public class Recording extends AppCompatActivity {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         resetRecording();
+                        hold.setBackgroundColor(0xFF00FF00);
                         try {
                             myAudioRecorder.prepare();
                             myAudioRecorder.start();
                         } catch (IllegalStateException ise) {
-                            // make something ...
+                            ise.printStackTrace();
                         } catch (IOException ioe) {
-                            // make something
+                            ioe.printStackTrace();
                         }
 
-                        Toast.makeText(getApplicationContext(), "Grabación iniciada", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(), "Grabación iniciada", Toast.LENGTH_SHORT).show();
                         return true; // if you want to handle the touch event
 
                     case MotionEvent.ACTION_UP:
-                        myAudioRecorder.stop();
-                        myAudioRecorder.release();
-                        myAudioRecorder = null;
-                        play.setEnabled(true);
-                        Toast.makeText(getApplicationContext(), "Audio guardado satisfactoriamente", Toast.LENGTH_SHORT).show();
+                        hold.setBackgroundColor(0xFFD9D9D9);
+                        try {
+                            myAudioRecorder.stop();
+                            myAudioRecorder.release();
+                            myAudioRecorder = null;
+                            play.setEnabled(true);
+                            Toast.makeText(getApplicationContext(), "Audio almacenado", Toast.LENGTH_SHORT).show();
+                        } catch (RuntimeException re) {
+                            Toast.makeText(getApplicationContext(), "Manten presionado el boton para grabar", Toast.LENGTH_SHORT).show();
+                        }
                         return true; // if you want to handle the touch event
                 }
                 return false;
             }
         });
 
-        activarBotonEnvio();
+        play.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MediaPlayer mediaPlayer = new MediaPlayer();
 
+                try {
+                    mediaPlayer.setDataSource(outputFile);
+                    mediaPlayer.prepare();
+                    mediaPlayer.start();
+                    Toast.makeText(getApplicationContext(), "Reproduciendo Audio", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+
+        activarBotonEnvio();
     }
 
     private void activarBotonEnvio() {
@@ -129,10 +184,6 @@ public class Recording extends AppCompatActivity {
             }
         }
     }
-
-    ProgressDialog progress;
-    Response response;
-
 
     private void enviarArchivo() {
         progress = new ProgressDialog(Recording.this);
@@ -165,6 +216,35 @@ public class Recording extends AppCompatActivity {
                         .build();
 
                 try {
+                    /* *
+                    * Codigo alternativo para ejecutar la peticion y capturar la respuesta
+                    * NO BORRAR
+                    *
+                    client.newCall(request).enqueue(new Callback() {
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+                        }
+                        @Override
+                        public void onResponse(Call call, Response response) throws IOException {
+
+                            Log.v("BK-201 URL: " , response.body().string());
+                            if (response.isSuccessful()) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getApplicationContext(), "Reporte enviado satisfactoriamente", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            } else {
+                                throw new IOException("Error : " + response);
+                            }
+                            progress.dismiss();
+                        }
+                    });
+                    *
+                    *
+                    * */
+
                     response = client.newCall(request).execute();
 
                     if (response.isSuccessful()) {
@@ -172,6 +252,12 @@ public class Recording extends AppCompatActivity {
                             @Override
                             public void run() {
                                 Toast.makeText(getApplicationContext(), "Reporte enviado satisfactoriamente", Toast.LENGTH_SHORT).show();
+                                try {
+                                    Log.v("Respuesta: " , response.body().string());
+                                } catch (IOException e) {
+                                    Toast.makeText(getApplicationContext(), "Hubo un inconveniente. Se hará ub reintento automaticamente", Toast.LENGTH_SHORT).show();
+                                    e.printStackTrace();
+                                }
                             }
                         });
                     } else {
@@ -180,6 +266,7 @@ public class Recording extends AppCompatActivity {
                     progress.dismiss();
 
                 } catch (IOException e) {
+                    Toast.makeText(getApplicationContext(), "Hubo un inconveniente. Se hará ub reintento automaticamente", Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                 }
             }
@@ -201,6 +288,4 @@ public class Recording extends AppCompatActivity {
         myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
         myAudioRecorder.setOutputFile(outputFile);
     }
-
-
 }
