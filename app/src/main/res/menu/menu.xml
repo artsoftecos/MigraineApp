@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <group android:id="@+id/group_main_id">
+        <item android:title="Main">
+            <menu>
+                <item android:title="Home"
+                    android:id="@+id/nav_item_home"
+                    android:icon="@drawable/inbox"/>
+
+                <item android:title="History of Episodes"
+                    android:id="@+id/nav_item_personas"
+                    android:icon="@drawable/sent"/>
+            </menu>
+        </item>
+    </group>
+
+    <group android:id="@+id/varios">
+        <item android:title="Settings">
+            <menu>
+                <item android:title="Bye"
+                    android:id="@+id/nav_item_salir"
+                    android:icon="@drawable/pikachu"/>
+            </menu>
+        </item>
+    </group>
+
+</menu>

@@ -12,13 +12,19 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        android:weightSum="1">
+        android:weightSum="1"
+        android:paddingTop="250dp"
+        >
 
         <Button
             android:id="@+id/btnIrAReportar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Reportar episodio" />
+            android:text="Reportar episodio"
+            android:layout_gravity="center"
+            android:gravity="center"
+
+            />
 
     </LinearLayout>
 

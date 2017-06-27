@@ -40,6 +40,7 @@ import okhttp3.Response;
 public class Recording extends AppCompatActivity {
 
     private Button play, hold, send;
+    private static View decorView;
     private MediaRecorder myAudioRecorder;
     private String outputFile;
     private ProgressDialog progress;
@@ -47,6 +48,7 @@ public class Recording extends AppCompatActivity {
     Spinner spinner;
     private SeekBar seekBar;
     private TextView nivel;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +94,7 @@ public class Recording extends AppCompatActivity {
 
 
         play.setEnabled(false);
+        send.setEnabled(false);
 
         outputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + "/recording.3gp";
 
@@ -135,6 +138,7 @@ public class Recording extends AppCompatActivity {
                             myAudioRecorder.release();
                             myAudioRecorder = null;
                             play.setEnabled(true);
+                            send.setEnabled(true);
                             Toast.makeText(getApplicationContext(), "Audio almacenado", Toast.LENGTH_SHORT).show();
                         } catch (RuntimeException re) {
                             Toast.makeText(getApplicationContext(), "Manten presionado el boton para grabar", Toast.LENGTH_SHORT).show();
@@ -257,6 +261,8 @@ public class Recording extends AppCompatActivity {
                                 } catch (IOException e) {
                                     Toast.makeText(getApplicationContext(), "Hubo un inconveniente. Se hará ub reintento automaticamente", Toast.LENGTH_SHORT).show();
                                     e.printStackTrace();
+                                } catch (android.os.NetworkOnMainThreadException e){
+                                    e.printStackTrace();
                                 }
                             }
                         });
@@ -288,4 +294,6 @@ public class Recording extends AppCompatActivity {
         myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
         myAudioRecorder.setOutputFile(outputFile);
     }
+
+
 }

@@ -7,7 +7,12 @@
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Aca deberias poder ver tu historial...algun dia"
-        android:textAlignment="center"/>
+        android:text="Aca deberias poder ver tu historial...algun día"
+        android:textAlignment="center"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:textSize="30sp"
+        android:paddingTop="250dp"
+        />
 
 </LinearLayout>

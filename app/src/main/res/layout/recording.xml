@@ -59,7 +59,7 @@
             android:id="@+id/textView4"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Cuánto has dormido ultimamente?"
+            android:text="¿Cuánto has dormido ultimamente?"
             android:textAlignment="center"
             android:paddingTop="50dp"/>
         <Spinner
