@@ -210,12 +210,12 @@ public class Recording extends AppCompatActivity {
                 RequestBody request_body = new MultipartBody.Builder()
                         .setType(MultipartBody.FORM)
                         .addFormDataPart("type", content_type)
-                        .addFormDataPart("data", "{\"id\": null,\"painLevel\": 2,\"sleepPattern\": \"poquito\",\"urlAudioFile\": null,\"foods\": [{\"id\": null,\"name\": \"carne5\"},{\"id\": null,\"name\": \"carne6\"}]}")
+                        .addFormDataPart("data", "{\"painLevel\": 2,\"sleepPattern\": \"poquito\",\"foods\": [{\"id\": 1 },{\"id\": 2 }], \"user\" : { \"documentNumber\" : \"1014207336\" }}")
                         .addFormDataPart("audioFile", file_path.substring(file_path.lastIndexOf("/") + 1), file_body)
                         .build();
 
                 Request request = new Request.Builder()
-                        .url("http://192.168.1.9:8080/episode/register/")
+                        .url("http://34.230.130.185/episode/register/")
                         .post(request_body)
                         .build();
 
