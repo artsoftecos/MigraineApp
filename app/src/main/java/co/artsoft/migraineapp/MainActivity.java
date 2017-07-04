@@ -10,6 +10,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -20,6 +21,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
+import co.artsoft.migraineapp.cipher.RSACipher;
 import co.artsoft.migraineapp.fragments.HistoryEpisode;
 import co.artsoft.migraineapp.fragments.Home;
 
@@ -35,13 +44,35 @@ public class MainActivity extends AppCompatActivity {
     private static View decorView;
     private static android.support.v7.widget.Toolbar toolbar;
 
-
+    private RSACipher cipher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        try {
+            cipher = new RSACipher();
+            String msg = "mensaje para cifrar la primera vez";
+            String cifrado = cipher.encrypt(msg);
+            String decifrado = cipher.decrypt(cifrado);
+
+            Log.d( "I", msg );
+            Log.d( "I", cifrado );
+            Log.d( "I", decifrado );
+
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        }
         home = new Home();
         historyEpisode = new HistoryEpisode();
 
@@ -94,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
                     icon = R.drawable.inbox;
                 }
                 if (menuItem.getItemId() == R.id.nav_item_salir) {
-                    text = "Good By";
+                    text = "Good Bye";
                     icon = R.drawable.pokemon;
                     customToast(text, icon );
                     finish();

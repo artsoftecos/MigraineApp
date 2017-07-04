@@ -50,6 +50,8 @@ public class Recording extends AppCompatActivity {
     private TextView nivel;
 
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,10 +71,13 @@ public class Recording extends AppCompatActivity {
         spinner.setAdapter(adapter);
 
 
+        seekBar.setMax(10);
+        seekBar.setProgress(5);
+        seekBar.setSoundEffectsEnabled(true);
         nivel.setText(seekBar.getProgress() + "/" + seekBar.getMax());
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            int progress = 0;
+            int progress = 5;
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
@@ -215,7 +220,9 @@ public class Recording extends AppCompatActivity {
                         .build();
 
                 Request request = new Request.Builder()
-                        .url("http://192.168.1.9:8080/episode/register/")
+                        //.url("http://192.168.1.9:8080/episode/register/")
+                        //.url("http://34.212.247.226:8080/migraineFeatures/episode/register/")
+                        .url("http://34.230.130.185/episode/register/")
                         .post(request_body)
                         .build();
 
@@ -259,7 +266,7 @@ public class Recording extends AppCompatActivity {
                                 try {
                                     Log.v("Respuesta: " , response.body().string());
                                 } catch (IOException e) {
-                                    Toast.makeText(getApplicationContext(), "Hubo un inconveniente. Se hará ub reintento automaticamente", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getApplicationContext(), "Hubo un inconveniente. Se hará un reintento automaticamente", Toast.LENGTH_SHORT).show();
                                     e.printStackTrace();
                                 } catch (android.os.NetworkOnMainThreadException e){
                                     e.printStackTrace();
@@ -272,7 +279,13 @@ public class Recording extends AppCompatActivity {
                     progress.dismiss();
 
                 } catch (IOException e) {
-                    Toast.makeText(getApplicationContext(), "Hubo un inconveniente. Se hará ub reintento automaticamente", Toast.LENGTH_SHORT).show();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), "Hubo un inconveniente. Intentalo de nuevo", Toast.LENGTH_SHORT).show();
+                            finish();
+                        }
+                    });
                     e.printStackTrace();
                 }
             }
