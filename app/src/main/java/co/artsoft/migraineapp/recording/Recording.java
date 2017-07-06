@@ -26,12 +26,15 @@ import java.io.File;
 import java.io.IOException;
 
 import co.artsoft.migraineapp.R;
+import okhttp3.Authenticator;
+import okhttp3.Credentials;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.Route;
 
 /**
  * Created by darthian on 6/24/17.
@@ -48,8 +51,6 @@ public class Recording extends AppCompatActivity {
     Spinner spinner;
     private SeekBar seekBar;
     private TextView nivel;
-
-
 
 
     @Override
@@ -209,13 +210,22 @@ public class Recording extends AppCompatActivity {
                 String content_type = getMimeType(f.getPath());
 
                 String file_path = f.getAbsolutePath();
-                OkHttpClient client = new OkHttpClient();
+                //OkHttpClient client = new OkHttpClient();
+
+                OkHttpClient client = new OkHttpClient.Builder().authenticator(new Authenticator() {
+                    public Request authenticate(Route route, Response response) throws IOException {
+                        String credential = Credentials.basic("1014207336", "password");
+                        return response.request().newBuilder().header("Authorization", credential).build();
+                    }
+                }).build();
+
                 RequestBody file_body = RequestBody.create(MediaType.parse(content_type), f);
 
                 RequestBody request_body = new MultipartBody.Builder()
                         .setType(MultipartBody.FORM)
                         .addFormDataPart("type", content_type)
-                        .addFormDataPart("data", "{\"painLevel\": 2,\"sleepPattern\": \"poquito\",\"foods\": [{\"id\": 1 },{\"id\": 2 }], \"user\" : { \"documentNumber\" : \"1014207336\" }}")
+                        //{"painLevel": 2,"sleepPattern": "poquito","foods": [{"id": 1 },{"id": 2 }], "user" : { "documentNumber" : "1014207336" }}
+                        .addFormDataPart("data", "{\"painLevel\": 3,\"sleepPattern\": \"poco\",\"foods\": [{\"id\": 3},{\"id\": 2}],\"locations\": [{\"id\": 1},{\"id\": 2}],\"medicines\": [{\"id\": 1},{\"id\": 2}],\"physicalActivity\": [{\"id\": 2},{\"id\": 3}],\"patient\" : {\"subsidiaryNumber\" : \"AF_001\"}} ")
                         .addFormDataPart("audioFile", file_path.substring(file_path.lastIndexOf("/") + 1), file_body)
                         .build();
 
@@ -265,11 +275,11 @@ public class Recording extends AppCompatActivity {
                                 Toast.makeText(getApplicationContext(), "Reporte enviado satisfactoriamente", Toast.LENGTH_SHORT).show();
                                 finish();
                                 try {
-                                    Log.v("Respuesta: " , response.body().string());
+                                    Log.v("Respuesta: ", response.body().string());
                                 } catch (IOException e) {
                                     Toast.makeText(getApplicationContext(), "Hubo un inconveniente. Se hará un reintento automaticamente", Toast.LENGTH_SHORT).show();
                                     e.printStackTrace();
-                                } catch (android.os.NetworkOnMainThreadException e){
+                                } catch (android.os.NetworkOnMainThreadException e) {
                                     e.printStackTrace();
                                 }
                             }
