@@ -52,6 +52,10 @@ public class RSACipher {
         generateKeyPair();
     }
 
+    public void setPulblicKey(PublicKey key){
+        this.publicKey = key;
+    }
+
     private void generateKeyPair()
             throws NoSuchAlgorithmException,
             NoSuchPaddingException,
@@ -151,7 +155,7 @@ public class RSACipher {
 
     }
 
-    public static PublicKey stringToPublicKey(String publicKeyString)
+    public PublicKey stringToPublicKey(String publicKeyString)
             throws NoSuchAlgorithmException,
             NoSuchPaddingException,
             InvalidKeyException,

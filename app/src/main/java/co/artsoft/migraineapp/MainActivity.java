@@ -10,6 +10,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -21,10 +22,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
@@ -53,14 +60,18 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             cipher = new RSACipher();
+
             String msg = "mensaje para cifrar la primera vez";
+
             String cifrado = cipher.encrypt(msg);
             String decifrado = cipher.decrypt(cifrado);
 
-            Log.d( "I", msg );
-            Log.d( "I", cifrado );
-            Log.d( "I", decifrado );
 
+            //Log.d( "I", msg );
+            //Log.d( "I", cifrado );
+            //Log.d( "I", decifrado );
+            //Log.d("I", cipher.getPublicKey("pkcs8-pem"));
+            //Log.d("I", cipher.stringToPublicKey(cipher.getPublicKey("pkcs8-pem")).toString());
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -200,5 +211,4 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
-
 }
