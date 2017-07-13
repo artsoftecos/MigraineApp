@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -67,19 +68,28 @@ public class HistoryEpisode extends Fragment {
 
             msg = "{\"pain_level\": 4,\"intensity_level\": 3}";
 
+            /*
             PublicKey pk = cipher.stringToPublicKey("-----BEGIN PUBLIC KEY-----" +
-                    "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC31J578hAXLFIhxfXH0jHOYEjI" +
-                    "Cn54PyNe58XUcmCicTyz4NlNNk9k1H6txhRGVSlq+OILvyZyLeJcaoveRLKJrJ25" +
-                    "p1vPZC9/Yp3FqkYQvpiLjrjeQTkchtORoXDAXVf+mHPZN13bwGl9fjff7Ene65Ph" +
-                    "rBewkuy9kC8PnAWK3wIDAQAB" +
+                    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtmnWRUnEBH5xJhh1WeYe" +
+                    "YofO9nUTTcEK4FBTjucaCUxVAxfDXf+r2OgM8J+2oXcWjJh5kmlulUlRYXRuFYZE" +
+                    "7Hi6WKQjVHbO02hzJbiA/JdxhEoOWUtRhUilUR0CxtZLOZ4sG/yQFFnkUt1T6ixY" +
+                    "vbxaoZ5RfjoETZuzeDOtwlvjnAQF4AlcUqGNwIvIvzHN8paS4ixC02UQovuGXdY4" +
+                    "YOJWZ18JUq4IMXbcmUXszQ1xPOiMbREfL6jjtXfj+laCEmMExTI2uBM3dJSwiCI8" +
+                    "rkhqj7m3/eB8BUFxpX/+xQTzAeNmVOZJQQ7gBK6VafDVB45FTR47qkAcRd0FiKGJ" +
+                    "AwIDAQAB" +
                     "-----END PUBLIC KEY-----");
+            */
+
+            PublicKey pk = cipher.stringToPublicKey("-----BEGIN PUBLIC KEY-----" +
+                    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp/kou6sGbTe9xa9MYkeOXGGjmj7f22NNbhWnoPHnr/OPfdRaT6KuJDve0sZXkRgrq7i7JLzhwAB3S8GdhLNe3hPaEvDA3DPbeOgRhlLyT4a+Lg+Vn92a5Dm44iXUwKU847XRw0HTNIpgUjS1Sow7vQWJpfy6KcLu4DHmwgHLSJefrercrXefdids/yrZVN6fGCrAQk2I0+KH1QAsI2qQ8SQK5RV3fUEL5tbVYj24NbZQ1WKeQsR8nHXSdKy6FG6ljV02WxtRQSTvuDER0klTFdC+CACK+qSh/ka2u4u2qQ45I0yKudG/JXGBoGPwGU4lofuOYDwbFHWC7kD8Svk2XQIDAQAB" +
+                    "-----END PUBLIC KEY-----");
+
 
             cifrado = cipher.encrypt(msg, pk);
             //decifrado = cipher.decrypt(cifrado);
 
-            cifrado = cifrado.replace("\n","");
 
-
+            Log.d("I","llave: "+cipher.getPublicKey("pkcs8-pem"));
             Log.d( "I", msg );
             Log.d( "I", cifrado );
 
@@ -97,8 +107,17 @@ public class HistoryEpisode extends Fragment {
 
         btnIrAReportar.setOnClickListener(new View.OnClickListener() {
 
+
             @Override
             public void onClick(View view) {
+
+
+
+                progress = new ProgressDialog(getActivity());
+                progress.setTitle("Enviando");
+                progress.setMessage("Por favor espera...");
+                progress.show();
+
                 Thread hiloEnvioArvhivo = new Thread(new Runnable() {
 
                     @Override
@@ -123,6 +142,21 @@ public class HistoryEpisode extends Fragment {
                             response = client.newCall(request).execute();
 
                             if (response.isSuccessful()) {
+                                getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(getActivity().getApplicationContext(), "Reporte enviado satisfactoriamente", Toast.LENGTH_SHORT).show();
+                                        getActivity().finish();
+                                        try {
+                                            Log.v("Respuesta: ", response.body().string());
+                                        } catch (IOException e) {
+                                            Toast.makeText(getActivity().getApplicationContext(), "Hubo un inconveniente. Se hará un reintento automaticamente", Toast.LENGTH_SHORT).show();
+                                            e.printStackTrace();
+                                        } catch (android.os.NetworkOnMainThreadException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                });
                                 Log.d("","");
                             } else {
                                 throw new IOException("Error : " + response);
@@ -130,6 +164,15 @@ public class HistoryEpisode extends Fragment {
                             progress.dismiss();
 
                         } catch (IOException e) {
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getActivity().getApplicationContext(), "Hubo un inconveniente. Intentalo de nuevo", Toast.LENGTH_SHORT).show();
+                                    //getActivity().getFragmentManager().beginTransaction().remove(this).commit();
+                                    getActivity().onBackPressed();
+                                    //getActivity().finish();
+                                }
+                            });
                             e.printStackTrace();
                         }
                     }
