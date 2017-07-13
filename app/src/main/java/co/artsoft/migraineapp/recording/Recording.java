@@ -64,7 +64,7 @@ public class Recording extends AppCompatActivity {
         seekBar = (SeekBar) findViewById(R.id.seekBar);
         nivel = (TextView) findViewById(R.id.nivel);
 
-        Spinner spinner = (Spinner) findViewById(R.id.spinner);
+        spinner = (Spinner) findViewById(R.id.spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.lista_patrones, android.R.layout.simple_spinner_item);
         // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -180,45 +180,6 @@ public class Recording extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-
-                Thread hiloEnvioArvhivo = new Thread(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        OkHttpClient client = new OkHttpClient();
-
-                        RequestBody request_body = new MultipartBody.Builder()
-                                .setType(MultipartBody.FORM)
-                                //{"painLevel": 2,"sleepPattern": "poquito","foods": [{"id": 1 },{"id": 2 }], "user" : { "documentNumber" : "1014207336" }}
-                                .addFormDataPart("req", "{\"painLevel\": "+seekBar.toString()+",\"sleepPattern\": \""+spinner.toString()+"\",\"foods\": [{\"id\": 3},{\"id\": 2}],\"locations\": [{\"id\": 1},{\"id\": 2}],\"medicines\": [{\"id\": 1},{\"id\": 2}],\"physicalActivity\": [{\"id\": 2},{\"id\": 3}],\"patient\" : {\"subsidiaryNumber\" : \"AF_001\"}} ")
-                                .build();
-
-                        Request request = new Request.Builder()
-                                //.url("http://192.168.1.9:8080/episode/register/")
-                                //.url("http://34.212.247.226:8080/migraineFeatures/episode/register/")
-                                .url("https://arquitectura-uniandes-melga.c9users.io/")
-                                .post(request_body)
-                                .build();
-
-                        try {
-
-                            response = client.newCall(request).execute();
-
-                            if (response.isSuccessful()) {
-                                Log.d("","");
-                            } else {
-                                throw new IOException("Error : " + response);
-                            }
-                            progress.dismiss();
-
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-
-                hiloEnvioArvhivo.start();
-
                 enviarArchivo();
             }
         });
@@ -265,10 +226,10 @@ public class Recording extends AppCompatActivity {
                         .setType(MultipartBody.FORM)
                         .addFormDataPart("type", content_type)
                         //{"painLevel": 2,"sleepPattern": "poquito","foods": [{"id": 1 },{"id": 2 }], "user" : { "documentNumber" : "1014207336" }}
-                        .addFormDataPart("data", "{\"painLevel\": "+seekBar.toString()+",\"sleepPattern\": \""+spinner.toString()+"\",\"foods\": [{\"id\": 3},{\"id\": 2}],\"locations\": [{\"id\": 1},{\"id\": 2}],\"medicines\": [{\"id\": 1},{\"id\": 2}],\"physicalActivity\": [{\"id\": 2},{\"id\": 3}],\"patient\" : {\"subsidiaryNumber\" : \"AF_001\"}} ")
+                        .addFormDataPart("data", "{\"painLevel\": "+seekBar.getProgress()+",\"sleepPattern\": \""+spinner.getSelectedItem().toString()+"\",\"foods\": [{\"id\": 3},{\"id\": 2}],\"locations\": [{\"id\": 1},{\"id\": 2}],\"medicines\": [{\"id\": 1},{\"id\": 2}],\"physicalActivity\": [{\"id\": 2},{\"id\": 3}],\"patient\" : {\"subsidiaryNumber\" : \"AF_001\"}} ")
                         .addFormDataPart("audioFile", file_path.substring(file_path.lastIndexOf("/") + 1), file_body)
                         .build();
-
+                Log.d("I","intensidad dolor: "+seekBar.getProgress()+", patron de sueño: " + spinner.getSelectedItem().toString());
                 Request request = new Request.Builder()
                         //.url("http://192.168.1.9:8080/episode/register/")
                         //.url("http://34.212.247.226:8080/migraineFeatures/episode/register/")
